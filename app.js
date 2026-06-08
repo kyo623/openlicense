@@ -2071,6 +2071,46 @@ function renderCalendar(month) {
     }
 }
 
+// 6-5-a-2. 캘린더 카드 HTML 강제 템플릿 (반드시 이 구조를 사용할 것)
+function renderCalendarEvents(events) {
+    const calendarContainer = document.getElementById('calendar-view') || document.querySelector('.calendar-container');
+    if (!calendarContainer) return;
+    
+    // 기존의 깨진 텍스트 찌꺼기를 완벽히 청소
+    calendarContainer.innerHTML = '';
+    
+    // 월별로 그룹화하여 출력하거나 순회할 때, 아래의 카드 구조를 강제로 주입
+    events.forEach(event => {
+        // 소프트웨어 이름 붙음 방지 처리 (.join)
+        const softwareList = Array.isArray(event.software) ? event.software.join(', ') : event.software;
+        
+        // 블랙프라이데이/역대급 태그일 경우 검은색 배지, 일반 태그일 경우 연그레이 배지 분기 처리
+        const isMegaSale = event.tag.includes('블랙프라이데이') || event.tag.includes('역대급');
+        const tagBgColor = isMegaSale ? '#1A202C' : '#EDF2F7';
+        const tagTextColor = isMegaSale ? '#FFFFFF' : '#4A5568';
+
+        const cardHTML = `
+            <div class="card calendar-card" style="display: flex !important; flex-direction: column !important; align-items: flex-start !important; padding: 24px !important; margin-bottom: 20px !important; background-color: #ffffff !important; border-radius: 12px !important; box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important; width: 100% !important; box-sizing: border-box !important; border: 1px solid #E2E8F0 !important; text-align: left !important;">
+                <h3 style="margin: 0 0 10px 0 !important; font-size: 18px !important; color: #2D3748 !important; font-weight: 800 !important; display: flex !important; align-items: center !important; gap: 8px !important;">
+                    <span>📅</span> ${event.month} - ${event.title}
+                </h3>
+                <p style="margin: 0 0 8px 0 !important; font-size: 14px !important; color: #4A5568 !important; font-weight: bold !important;">
+                    <span style="color: #4A5568 !important;">적용 대상:</span> ${softwareList}
+                </p>
+                <p style="margin: 0 0 16px 0 !important; font-size: 14px !important; color: #718096 !important; line-height: 1.6 !important; font-weight: normal !important;">
+                    ${event.description}
+                </p>
+                <div class="calendar-tags" style="display: flex !important; gap: 6px !important; margin: 0 !important; padding: 0 !important;">
+                    <span class="calendar-tag" style="display: inline-block !important; padding: 6px 14px !important; background-color: ${tagBgColor} !important; color: ${tagTextColor} !important; border-radius: 20px !important; font-size: 12px !important; font-weight: bold !important; border: none !important;">
+                        ${event.tag}
+                    </span>
+                </div>
+            </div>
+        `;
+        calendarContainer.insertAdjacentHTML('beforeend', cardHTML);
+    });
+}
+
 // 6-5-b. 2026년 하반기 전체 프로모션 일정을 월별 그룹화하여 렌더링하는 전용 함수
 function renderCalendarTab() {
     const calendarLayout = document.querySelector("#tab-calendar .calendar-page-layout");
@@ -2093,8 +2133,10 @@ function renderCalendarTab() {
 
     // 타임라인 컨테이너 생성
     const timelineContainer = document.createElement("div");
-    timelineContainer.className = "calendar-timeline-container";
-    
+    timelineContainer.id = "calendar-view";
+    timelineContainer.className = "calendar-container";
+    calendarLayout.appendChild(timelineContainer);
+
     // 월별 그룹화 (6, 8, 10, 11, 12월 등)
     const groupedEvents = {};
     if (Array.isArray(calendarEvents)) {
@@ -2114,29 +2156,14 @@ function renderCalendarTab() {
         timelineContainer.innerHTML = `<div class="timeline-empty-message" style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13.5px; background-color: var(--white); border-radius: var(--border-radius-md); border: 1px dashed rgba(0,31,63,0.12);">예정된 소프트웨어 프로모션 일정이 없습니다.</div>`;
     } else {
         months.forEach(m => {
-            const monthSection = document.createElement("div");
-            monthSection.className = "calendar-month-section";
-            
-            // 월 헤더
-            const monthTitle = document.createElement("h3");
-            monthTitle.className = "calendar-month-section-title";
-            monthTitle.innerHTML = `<span class="month-num">${m}</span>월 주요 프로모션`;
-            monthSection.appendChild(monthTitle);
+            // 월 헤더 추가
+            const monthHeader = document.createElement("div");
+            monthHeader.className = "calendar-month-header";
+            monthHeader.textContent = `${m}월 주요 프로모션`;
+            timelineContainer.appendChild(monthHeader);
 
-            // 해당 월 카드 리스트
-            const cardsList = document.createElement("div");
-            cardsList.className = "calendar-month-cards-list";
-
+            // 해당 월의 이벤트들 순회하며 카드 생성
             groupedEvents[m].forEach(evt => {
-                const card = document.createElement("div");
-                card.className = "card calendar-promo-card";
-
-                // #블랙프라이데이 강조용 하이라이트 클래스
-                const hasBlackFriday = evt.tags && evt.tags.some(t => t.includes("블랙프라이데이"));
-                if (hasBlackFriday) {
-                    card.classList.add("highlight-black-friday");
-                }
-
                 // 관련 소프트웨어 배지 쉼표와 공백 조인 포맷팅
                 const softwareList = Array.isArray(evt.software) ? evt.software : [evt.software];
                 const displayNames = softwareList.map(swKey => {
@@ -2144,39 +2171,34 @@ function renderCalendarTab() {
                     return foundSw ? foundSw.name : swKey;
                 });
                 const softwareText = displayNames.join(", ");
+                const tagStr = evt.태그 || (evt.tags ? evt.tags[0] : "") || evt.tag || "";
+                
+                const isMegaSale = tagStr.includes("블랙프라이데이") || tagStr.includes("역대급");
+                const tagBgColor = isMegaSale ? "#1A202C" : "#EDF2F7";
+                const tagTextColor = isMegaSale ? "#FFFFFF" : "#4A5568";
 
-                // 태그 배지 생성 (calendar-tag 클래스 적용)
-                const tagsHtml = (evt.tags || []).map(tag => {
-                    const isBF = tag.includes("블랙프라이데이") || tag.includes("역대급할인");
-                    const badgeClass = isBF ? "highlight-bf" : "";
-                    return `<span class="calendar-tag ${badgeClass}">${tag}</span>`;
-                }).join("");
-
-                card.innerHTML = `
-                    <div class="calendar-promo-card-header">
-                        <div class="calendar-promo-title-row">
-                            <h4 class="calendar-promo-title">${evt.title}</h4>
-                            <div class="calendar-tags-container">${tagsHtml}</div>
+                const cardHTML = `
+                    <div class="card calendar-card" style="display: flex !important; flex-direction: column !important; align-items: flex-start !important; padding: 24px !important; margin-bottom: 20px !important; background-color: #ffffff !important; border-radius: 12px !important; box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important; width: 100% !important; box-sizing: border-box !important; border: 1px solid #E2E8F0 !important; text-align: left !important;">
+                        <h3 style="margin: 0 0 10px 0 !important; font-size: 18px !important; color: #2D3748 !important; font-weight: 800 !important; display: flex !important; align-items: center !important; gap: 8px !important;">
+                            <span>📅</span> ${evt.월 || (m + '월')} - ${evt.title || evt.행사명}
+                        </h3>
+                        <p style="margin: 0 0 8px 0 !important; font-size: 14px !important; color: #4A5568 !important; font-weight: bold !important;">
+                            <span style="color: #4A5568 !important;">적용 대상:</span> ${softwareText}
+                        </p>
+                        <p style="margin: 0 0 16px 0 !important; font-size: 14px !important; color: #718096 !important; line-height: 1.6 !important; font-weight: normal !important;">
+                            ${evt.desc || evt.설명 || evt.description}
+                        </p>
+                        <div class="calendar-tags" style="display: flex !important; gap: 6px !important; margin: 0 !important; padding: 0 !important;">
+                            <span class="calendar-tag" style="display: inline-block !important; padding: 6px 14px !important; background-color: ${tagBgColor} !important; color: ${tagTextColor} !important; border-radius: 20px !important; font-size: 12px !important; font-weight: bold !important; border: none !important;">
+                                ${tagStr}
+                            </span>
                         </div>
-                        <div class="calendar-promo-date-badge">${evt.월 || (m + '월')}</div>
-                    </div>
-                    <div class="calendar-promo-card-body">
-                        <p class="calendar-promo-desc">${evt.desc}</p>
-                    </div>
-                    <div class="calendar-promo-card-footer">
-                        <span class="calendar-footer-label">💡 관련 소프트웨어:</span>
-                        <span class="calendar-sw-text">${softwareText}</span>
                     </div>
                 `;
-                cardsList.appendChild(card);
+                timelineContainer.insertAdjacentHTML('beforeend', cardHTML);
             });
-
-            monthSection.appendChild(cardsList);
-            timelineContainer.appendChild(monthSection);
         });
     }
-
-    calendarLayout.appendChild(timelineContainer);
 }
 
 // 6-6. 독립형 커뮤니티(Community) 작성자 폼 및 이미지 업로드 처리
