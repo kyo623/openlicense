@@ -1,0 +1,106 @@
+/* ==================== guide.css ==================== */
+
+/* 1. 사이드바 vs 메인 컨텐츠 레이아웃 분리 및 스크롤 독립 */
+.manual-page-layout {
+    display: flex !important;
+    flex-direction: row !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+    align-items: stretch !important;
+    gap: 0px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+}
+
+/* 사이드바 (Left) */
+.manual-nav-sidebar {
+    width: 280px !important;
+    flex-shrink: 0 !important;
+    overflow-y: auto !important;
+    border-right: 1px solid #e2e8f0 !important;
+    height: 100vh !important;
+    position: static !important;
+    box-sizing: border-box !important;
+    background-color: var(--white) !important;
+}
+
+/* 메인 컨텐츠 (Right) */
+.manual-main-content {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    position: relative !important;
+    height: 100vh !important;
+    box-sizing: border-box !important;
+    padding: 40px !important;
+}
+
+/* 2. 카테고리 제목 (Section Header) */
+.manual-sidebar-category-title {
+    font-size: 12px !important;
+    font-weight: bold !important;
+    color: #718096 !important;
+    margin: 16px 0 8px 12px !important;
+    text-transform: uppercase !important;
+}
+
+/* 3. 어도비 및 브랜드 로고 크기 조정 (32px x 32px 고정 및 비율 유지) */
+.guide-header img,
+.manual-logo-wrap img,
+.manual-logo-img,
+.manual-brand img {
+    width: 32px !important;
+    height: 32px !important;
+    max-width: 32px !important;
+    max-height: 32px !important;
+    object-fit: contain !important;
+    flex-shrink: 0 !important;
+}
+
+/* 4. 상단 헤더 영역 정렬 복구 (가로 정렬 및 gap 조정) */
+.guide-header,
+.manual-brand {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+/* 5. 하얀 배경 가림 현상 수정 (투명 배경 처리 및 자연스러운 배치) */
+#guide-content-area,
+.manual-sections-list {
+    background-color: transparent !important;
+    background: transparent !important;
+    position: relative !important;
+    z-index: auto !important;
+    box-shadow: none !important;
+}
+
+/* 6. 소프트웨어 아이콘 리스트 정렬 복구 (24px x 24px 정렬 고정) */
+.software-icon-item,
+.quick-nav-link {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.software-icon-item img,
+.quick-nav-logo {
+    width: 24px !important;
+    height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    object-fit: contain !important;
+    flex-shrink: 0 !important;
+}
+
+/* 7. 카드 이미지 및 fallback 로고 잔상 방어용 배경/블렌드모드 초기화 */
+.card img, 
+.fallback-logo,
+.sw-card img,
+.adobe-single-app-card img,
+.manual-logo-wrap img,
+.manual-logo-img,
+.quick-nav-logo {
+    background-color: transparent !important;
+    mix-blend-mode: normal !important;
+}
